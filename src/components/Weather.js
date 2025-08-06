@@ -1,13 +1,14 @@
 // src/components/Weather.js
 import React, { useState } from 'react';
 import axios from 'axios';
+console.log('API KEY:', process.env.REACT_APP_WEATHER_API_KEY);
 
 const Weather = () => {
   const [city, setCity] = useState('');
   const [weather, setWeather] = useState(null);
   const [error, setError] = useState(null);
 
-  const apiKey = '--------------';
+  const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
 
   const fetchWeather = async () => {
     try {
