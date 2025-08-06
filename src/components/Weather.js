@@ -1,7 +1,7 @@
 // src/components/Weather.js
 import React, { useState } from 'react';
 import axios from 'axios';
-console.log('API KEY:', process.env.REACT_APP_WEATHER_API_KEY);
+import { Container, Form, Button, Card, Row, Col, Alert } from 'react-bootstrap';
 
 const Weather = () => {
   const [city, setCity] = useState('');
@@ -12,115 +12,127 @@ const Weather = () => {
 
   const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
 
-    const fetchAirQuality = async (lat, lon) => {
-          try {
-            const res = await axios.get(
-              `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`
-            );
-            setAirQuality(res.data);
-          } catch (err) {
-            setAirQuality(null);
-          }
-        };
+  const fetchAirQuality = async (lat, lon) => {
+    try {
+      const res = await axios.get(
+        `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`
+      );
+      setAirQuality(res.data);
+    } catch (err) {
+      setAirQuality(null);
+    }
+  };
 
-    const fetchWeather = async () => {
-      try {
+  const fetchWeather = async () => {
+    try {
       const resWeather = await axios.get(
         `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&lang=pt_br&appid=${apiKey}`
       );
       setWeather(resWeather.data);
       setError(null);
 
-        const resForecast = await axios.get(
+      const resForecast = await axios.get(
         `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&lang=pt_br&appid=${apiKey}`
-        );
-        setForecast(resForecast.data);
+      );
+      setForecast(resForecast.data);
 
-        const {lat, lon} = resWeather.data.coord;
-        await fetchAirQuality(lat, lon);
-
-      } catch (err) {
-        setWeather(null);
-        setForecast(null);
-        setAirQuality(null);
-        setError('Cidade não encontrada.');
-      }
-      
-    
-
+      const { lat, lon } = resWeather.data.coord;
+      await fetchAirQuality(lat, lon);
+    } catch (err) {
+      setWeather(null);
+      setForecast(null);
+      setAirQuality(null);
+      setError('Cidade não encontrada.');
+    }
   };
 
   return (
-    <div>
-      <h2>Previsão do Tempo</h2>
-      <input
-        type="text"
-        value={city}
-        onChange={(e) => setCity(e.target.value)}
-        placeholder="Digite uma cidade"
-      />
-      <button onClick={fetchWeather}>Buscar</button>
+    <Container className="mt-5">
+      <h2 className="mb-4 text-center">Previsão do Tempo</h2>
 
-      {error && <p>{error}</p>}
-      {weather && (
-        <div>
-          <h3>{weather.name}, {weather.sys.country}</h3>
-          <p>{weather.weather[0].description}</p>
-          <p>🌡️ {weather.main.temp} °C</p>
-          <p>💧 Umidade: {weather.main.humidity}%</p>
-          <p>🌬️ Vento: {weather.wind.speed} km/h</p>
-          <img
-            src={`http://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
-            alt="Ícone do clima"
+      <Form className="mb-4">
+        <Form.Group controlId="cityInput">
+          <Form.Control
+            type="text"
+            value={city}
+            placeholder="Digite uma cidade"
+            onChange={(e) => setCity(e.target.value)}
           />
-        </div>
+        </Form.Group>
+        <Button className="mt-2 w-100" onClick={fetchWeather}>Buscar</Button>
+      </Form>
+
+      {error && <Alert variant="danger">{error}</Alert>}
+
+      {weather && (
+        <Card className="mb-4">
+          <Card.Body>
+            <Card.Title>{weather.name}, {weather.sys.country}</Card.Title>
+            <Card.Text className="text-capitalize">{weather.weather[0].description}</Card.Text>
+            <Row className="mb-3">
+              <Col>🌡️ {weather.main.temp} °C</Col>
+              <Col>💧 Umidade: {weather.main.humidity}%</Col>
+              <Col>🌬️ Vento: {weather.wind.speed} km/h</Col>
+            </Row>
+            <img
+              src={`http://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
+              alt="Ícone do clima"
+            />
+          </Card.Body>
+        </Card>
       )}
 
       {forecast && (
-        <div>
-          <h3>Previsão para 5 dias</h3>
-          <div style={{ display: 'flex', overflowX: 'auto' }}>
+        <>
+          <h3 className="mb-3">Previsão para 5 dias</h3>
+          <Row className="flex-nowrap overflow-auto mb-4">
             {forecast.list
               .filter((item, index) => index % 8 === 0)
               .map((item) => (
-                <div key={item.dt} style={{ margin: '0 10px', textAlign: 'center' }}>
-                  <p>{new Date(item.dt_txt).toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'numeric' })}</p>
-                  <img
-                    src={`https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`}
-                    alt={item.weather[0].description}
-                  />
-                  <p>{item.weather[0].description}</p>
-                  <p>🌡️ {item.main.temp.toFixed(1)} °C</p>
-                </div>
+                <Col key={item.dt} xs={6} sm={4} md={3} lg={2} className="mb-3">
+                  <Card className="text-center">
+                    <Card.Body>
+                      <Card.Title>
+                        {new Date(item.dt_txt).toLocaleDateString('pt-BR', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'numeric'
+                        })}
+                      </Card.Title>
+                      <Card.Img
+                        variant="top"
+                        src={`https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`}
+                        alt={item.weather[0].description}
+                      />
+                      <Card.Text className="text-capitalize">{item.weather[0].description}</Card.Text>
+                      <Card.Text>🌡️ {item.main.temp.toFixed(1)} °C</Card.Text>
+                    </Card.Body>
+                  </Card>
+                </Col>
               ))}
-          </div>
-        </div>
+          </Row>
+        </>
       )}
 
-     {airQuality && (
-      <div>
-        <h3>Qualidade do Ar</h3>
-        <p>
-          Índice de Qualidade do Ar (AQI): {airQuality.list[0].main.aqi} {' '}
-          {airQuality.list[0].main.aqi === 1 && '(Bom)'}
-          {airQuality.list[0].main.aqi === 2 && '(Moderado)'}
-          {airQuality.list[0].main.aqi === 3 && '(Ruim)'}
-          {airQuality.list[0].main.aqi === 4 && '(Muito Ruim)'}
-          {airQuality.list[0].main.aqi === 5 && '(Péssimo)'}
-        </p>
-        <p>CO: {airQuality.list[0].components.co} μg/m³</p>
-        <p>NO: {airQuality.list[0].components.no} μg/m³</p>
-        <p>NO₂: {airQuality.list[0].components.no2} μg/m³</p>
-        <p>O₃: {airQuality.list[0].components.o3} μg/m³</p>
-        <p>SO₂: {airQuality.list[0].components.so2} μg/m³</p>
-        <p>PM2.5: {airQuality.list[0].components.pm2_5} μg/m³</p>
-        <p>PM10: {airQuality.list[0].components.pm10} μg/m³</p>
-        <p>NH₃: {airQuality.list[0].components.nh3} μg/m³</p>
-      </div>
-
-    )}
-    
-    </div>
+      {airQuality && (
+        <Card>
+          <Card.Body>
+            <Card.Title>Qualidade do Ar</Card.Title>
+            <Card.Text>
+              AQI: {airQuality.list[0].main.aqi} {' '}
+              {['(Bom)', '(Moderado)', '(Ruim)', '(Muito Ruim)', '(Péssimo)'][airQuality.list[0].main.aqi - 1]}
+            </Card.Text>
+            <Row>
+              {Object.entries(airQuality.list[0].components).map(([key, value]) => (
+                <Col xs={6} md={4} key={key}>
+                  <p><strong>{key.toUpperCase()}:</strong> {value} μg/m³</p>
+                </Col>
+              ))}
+            </Row>
+          </Card.Body>
+        </Card>
+      )}
+    </Container>
   );
 };
 
