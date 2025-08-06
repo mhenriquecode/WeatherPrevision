@@ -7,11 +7,21 @@ const Weather = () => {
   const [city, setCity] = useState('');
   const [weather, setWeather] = useState(null);
   const [forecast, setForecast] = useState(null);
-
+  const [airQuality, setAirQuality] = useState(null);
   const [error, setError] = useState(null);
 
   const apiKey = process.env.REACT_APP_WEATHER_API_KEY;
 
+    const fetchAirQuality = async (lat, lon) => {
+          try {
+            const res = await axios.get(
+              `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`
+            );
+            setAirQuality(res.data);
+          } catch (err) {
+            setAirQuality(null);
+          }
+        };
 
     const fetchWeather = async () => {
       try {
@@ -26,11 +36,18 @@ const Weather = () => {
         );
         setForecast(resForecast.data);
 
+        const {lat, lon} = resWeather.data.coord;
+        await fetchAirQuality(lat, lon);
+
       } catch (err) {
         setWeather(null);
         setForecast(null);
+        setAirQuality(null);
         setError('Cidade não encontrada.');
       }
+      
+    
+
   };
 
   return (
@@ -80,6 +97,29 @@ const Weather = () => {
         </div>
       )}
 
+     {airQuality && (
+      <div>
+        <h3>Qualidade do Ar</h3>
+        <p>
+          Índice de Qualidade do Ar (AQI): {airQuality.list[0].main.aqi} {' '}
+          {airQuality.list[0].main.aqi === 1 && '(Bom)'}
+          {airQuality.list[0].main.aqi === 2 && '(Moderado)'}
+          {airQuality.list[0].main.aqi === 3 && '(Ruim)'}
+          {airQuality.list[0].main.aqi === 4 && '(Muito Ruim)'}
+          {airQuality.list[0].main.aqi === 5 && '(Péssimo)'}
+        </p>
+        <p>CO: {airQuality.list[0].components.co} μg/m³</p>
+        <p>NO: {airQuality.list[0].components.no} μg/m³</p>
+        <p>NO₂: {airQuality.list[0].components.no2} μg/m³</p>
+        <p>O₃: {airQuality.list[0].components.o3} μg/m³</p>
+        <p>SO₂: {airQuality.list[0].components.so2} μg/m³</p>
+        <p>PM2.5: {airQuality.list[0].components.pm2_5} μg/m³</p>
+        <p>PM10: {airQuality.list[0].components.pm10} μg/m³</p>
+        <p>NH₃: {airQuality.list[0].components.nh3} μg/m³</p>
+      </div>
+
+    )}
+    
     </div>
   );
 };
